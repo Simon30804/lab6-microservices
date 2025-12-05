@@ -19,7 +19,7 @@ Describe the changes you made to the configuration:
 
 ### Accounts Service Registration
 
-![Accounts Registration Log](docs/screenshots/accounts-registration.png)
+![Accounts Registration Log](docs/screenshots/accounts-registration.jpeg)
 
 Explain what happens during service registration.
 Cuando un microservicio se inicia, contacta al servidor Eureka en la dirección especificada en su configuración.
@@ -28,7 +28,7 @@ Eureka recibe esta información y añade la instancia a su registro de servicios
 
 ### Web Service Registration
 
-![Web Registration Log](docs/screenshots/web-registration.png)
+![Web Registration Log](docs/screenshots/web-registration.jpeg)
 
 Explain how the web service discovers the accounts service.
 El servicio web también se registra en Eureka de manera similar al servicio de cuentas.
@@ -39,7 +39,7 @@ Eureka responde con la información necesaria para que el servicio web pueda con
 
 ## 3. Eureka Dashboard (Task 2)
 
-![Eureka Dashboard](docs/screenshots/eureka-dashboard.png)
+![Eureka Dashboard](docs/screenshots/eureka-dashboard.jpeg)
 
 Describe what the Eureka dashboard shows:
 - El dashboard de eureka muestra una lista de todos los servicios registrados y sus instancias,
@@ -52,7 +52,7 @@ Describe what the Eureka dashboard shows:
 
 ## 4. Multiple Instances (Task 4)
 
-![Multiple Instances](docs/screenshots/multiple-instances.png)
+![Multiple Instances](docs/screenshots/multiple-instances.jpeg)
 
 Answer the following questions:
 
@@ -71,7 +71,7 @@ Answer the following questions:
 
 ### Initial Failure
 
-![Error Screenshot](docs/screenshots/failure-error.png)
+![Error Screenshot](docs/screenshots/failure-error.jpeg)
 
 Describe what happens immediately after stopping the accounts service on port 3333.
 - Justo después de detener la instancia del servicio de cuentas en el puerto 3333, el servicio web intenta realizar una solicitud a esa instancia, sin embargo
@@ -79,7 +79,7 @@ Describe what happens immediately after stopping the accounts service on port 33
 
 ### Eureka Instance Removal
 
-![Instance Removal](docs/screenshots/instance-removal.png)
+![Instance Removal](docs/screenshots/instance-removal.jpeg)
 
 Explain how Eureka detects and removes the failed instance:
 
@@ -93,7 +93,7 @@ Explain how Eureka detects and removes the failed instance:
 
 ## 6. Service Recovery Analysis (Task 6)
 
-![Recovery State](docs/screenshots/recovery.png)
+![Recovery State](docs/screenshots/recovery.jpeg)
 
 Answer the following questions:
 
@@ -131,10 +131,31 @@ Summarize what you learned about:
 **Did you use AI tools?** (ChatGPT, Copilot, Claude, etc.)
 
 - If YES: Which tools? What did they help with? What did you do yourself?
+- Yes, he usado Gemini 2.5  para ayudarme a redactar y estructurar algunas secciones del informe.
 - If NO: Write "No AI tools were used."
 
 **Important**: Explain your own understanding of microservices patterns and Eureka behavior, even if AI helped you write parts of this report.
+El uso de la arquitectura de microservicios permite dividir una aplicación en servicios pequeños e independientes que pueden desarrollarse, desplegarse 
+y escalarse de manera autónoma; tales como accounts-service y web-service en este laboratorio. Este enfoque mejora la modularidad y la escalabilidad, pero
+introduce el problema de cómo estos servicios se comunican entre sí, especialmente cuando sus ubicaciones de red (IP y puerto) pueden cambiar dinámicamente.
+Aquí es donde entra en juego el patrón de descubrimiento de servicios, implementado con Eureka.
 
+Comportamiento de Eureka:
+Registro Central: El servidor Eureka actúa como una guía telefónica para todos los microservicios. Cuando una instancia de un servicio (por ejemplo, accounts-service)
+se inicia, se registra en Eureka, proporcionando su nombre, dirección y puerto.
+Detección de Fallos (Heartbeats): Para asegurarse de que la guía esté actualizada, cada servicio envía "latidos" (heartbeats) periódicos a Eureka para indicar que 
+sigue en funcionamiento. Si Eureka no recibe un latido de una instancia en un tiempo determinado (10 segundos en esta configuración), la considera "muerta".
+Eliminación de Instancias: Eureka ejecuta una tarea periódica (cada segundo en esta configuración) para eliminar las instancias "muertas" de su registro. Esto 
+asegura que otros servicios no intenten comunicarse con una instancia que ya no existe.
+Descubrimiento por parte del Cliente: Cuando un servicio (como web-service) necesita hablar con otro (como accounts-service), primero le pregunta a Eureka: 
+"¿Dónde puedo encontrar el accounts-service?". Eureka responde con una lista de todas las instancias sanas y disponibles.
+Balanceo de Carga y Caché del Cliente: El cliente (el web-service) recibe esta lista y la guarda en una caché local. Esto es eficiente porque no tiene que 
+preguntar a Eureka en cada solicitud. Luego, utiliza un balanceador de carga del lado del cliente (como Ribbon) para distribuir las solicitudes entre las instancias
+disponibles, por ejemplo, de forma rotatoria (round-robin). Esta caché se actualiza periódicamente (cada 30 segundos por defecto), lo que explica el retraso en la 
+recuperación: el cliente puede seguir intentando usar una instancia fallida hasta que su caché local se actualice con la nueva lista de Eureka.
+
+En resumen, Eureka permite que el ecosistema de microservicios sea dinámico y resiliente. Facilita que los servicios se encuentren entre sí y permite que el sistema 
+se "cure" a sí mismo eliminando automáticamente las instancias fallidas del enrutamiento, todo sin intervención manual.
 ---
 
 ## Additional Notes
